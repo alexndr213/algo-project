@@ -12,7 +12,7 @@ with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
     secret = f.read()
 api = krakenex.API(key.rstrip(), secret.rstrip())
 k = KrakenAPI(api)
-#%% Functions
+#%% Function
 def convert_to_ohlc(df, granularity):
     # Determine time frame of data
     since = df['time'].iloc[0] * 1000000000
@@ -53,15 +53,13 @@ def convert_to_ohlc(df, granularity):
 #%%test
 
 
-
-
+account_balance=k.get_account_balance()
+print(account_balance)
 
 df, last = k.get_recent_trades("XBTUSD", ascending=True)
 
 
-# !Convert data to OHLC data, steps of 5 seconds
-# df = convert_to_ohlc(df, 5)
-# df,last=k.get_ohlc_data('XBTUSD',interval=21600)
+
 
 # Infinite loop for additiona!l OHLC data
 while True:
@@ -73,9 +71,7 @@ while True:
     # print(k.api_counter)
     # Convert data to OHLC data, steps of 5 seconds
     if not data.empty:
-        data = convert_to_ohlc(data, 1)
+        data = convert_to_ohlc(data, 2)
         df = pd.concat([df, data])
         print(data)
-        # print(f'{len(data.index)} new data point{"s" if len(data.index) > 1 else ""} downloaded. Total: {len(df.index)} data points.')
-    # else:
-    #     print("Could not find new trades. Retrying...")
+
