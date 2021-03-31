@@ -4,12 +4,13 @@ import pandas as pd
 from datetime import timedelta
 import time
 import numpy as np
+import matplotlib as plt
 #%% API
 with open('/home/alex/Documents/skola/finproj/key.txt') as f:
     key = f.read()
 with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
-    
     secret = f.read()
+    
 api = krakenex.API(key.rstrip(), secret.rstrip())
 k = KrakenAPI(api)
 #%% Function
@@ -52,14 +53,16 @@ def convert_to_ohlc(df, granularity):
     return output
 #%%test
 
-
 account_balance=k.get_account_balance()
 print(account_balance)
+
+# s=k.get_order_book(XBTUSD,10)
 
 df, last = k.get_recent_trades("XBTUSD", ascending=True)
 
 
-
+data = pd.read_csv('/home/alex/Documents/skola/finproj/XBTUSD.csv')
+data.head()
 
 # Infinite loop for additiona!l OHLC data
 while True:
