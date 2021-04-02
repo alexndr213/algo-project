@@ -19,11 +19,15 @@ from event import FillEvent, OrderEvent
 from performance import create_sharpe_ratio, create_drawdowns
 
 
-class Portfolio(object):
+class PortfolioHFT(object):
     """
     The Portfolio class handles the positions and market
-    value of all instruments at a resolution of a "bar",
-    i.e. secondly, minutely, 5-min, 30-min, 60 min or EOD.
+    value of all instruments at a resolution of one
+    minutely bar. It is almost identical to the standard
+    Portfolio class, except that the Sharpe Ratio 
+    calculation is modified and the correct call is made
+    to the HFT Data object for the 'close' price with 
+    DTN IQFeed data.
 
     The positions DataFrame stores a time-index of the 
     quantity of positions held. 
@@ -247,7 +251,7 @@ class Portfolio(object):
         returns = self.equity_curve['returns']
         pnl = self.equity_curve['equity_curve']
 
-        sharpe_ratio = create_sharpe_ratio(returns)
+        sharpe_ratio = create_sharpe_ratio(returns, periods=252*6.5*60)
         drawdown, max_dd, dd_duration = create_drawdowns(pnl)
         self.equity_curve['drawdown'] = drawdown
 
