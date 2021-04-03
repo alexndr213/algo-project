@@ -57,7 +57,7 @@ account_balance=k.get_account_balance()
 print(account_balance)
 
 # s=k.get_order_book(XBTUSD,10)
-
+df=k.get_ohlc_data('XBTUSD',240)
 df, last = k.get_recent_trades("XBTUSD", ascending=True)
 
 
@@ -65,16 +65,16 @@ data = pd.read_csv('/home/alex/Documents/skola/finproj/XBTUSD.csv')
 data.head()
 
 # Infinite loop for additiona!l OHLC data
-while True:
-    # Wait 60 seconds for new trades to happen
-    time.sleep(2)
+# while True:
+#     # Wait 60 seconds for new trades to happen
+#     time.sleep(2)
 
-    # Get new trades data
-    data, last = k.get_recent_trades("XBTUSD", since=last, ascending=True)
-    # print(k.api_counter)
-    # Convert data to OHLC data, steps of 5 seconds
-    if not data.empty:
-        data = convert_to_ohlc(data, 2)
-        df = pd.concat([df, data])
-        print(data)
+#     # Get new trades data
+#     data, last = k.get_recent_trades("XBTUSD", since=last, ascending=True)
+#     # print(k.api_counter)
+#     # Convert data to OHLC data, steps of 5 seconds
+#     if not data.empty:
+#         data = convert_to_ohlc(data, 2)
+#         df = pd.concat([df, data])
+#         print(data)
 

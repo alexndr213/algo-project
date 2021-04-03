@@ -14,8 +14,35 @@ if __name__ == "__main__":
     print("Obtaining Apple data from AlphaVantage and saving as CSV...")
     aapl ,meta= ts.get_daily('GOOG',outputsize='full')
     # ts.get_daily_adjusted()
-    # aapl=aapl[0]
-    # aapl=pd.DataFrame.from_dict(aapl,orient='index')
     aapl.to_csv('GOOG.csv')
     
-open()
+s=open('GOOG.csv')
+
+
+import pandas as pd
+
+dfalphavantage = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/GOOG.csv')
+print (dfalphavantage)
+
+dfkrakenOHLCV = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/XBTUSD_1440m_daily.csv', names=[
+                    'unix', 'open', 'high', 
+                    'low', 'close', 'volume','trades'
+                ])
+
+dfkrakenOHLCV = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/XBTUSD_1440m_daily.csv')
+
+# for i in range(0,len(dfkrakenOHLCV))
+dfkrakenOHLCV['unix']= pd.to_datetime(dfkrakenOHLCV['unix'],unit='s')
+
+import datetime
+datetime.datetime.fromtimestamp(1381017600).strftime('%Y-%m-%d')
+
+s=(dfalphavantage.columns==['date', '1. open', '2. high', '3. low', '4. close', '5. volume']).any
+    
+while True:
+    try:
+        pd.to_datetime(dfkrakenOHLCV.columns[0],unit='s')
+        print('x')
+        break
+    except ValueError:
+        print('y')
