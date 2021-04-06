@@ -140,6 +140,15 @@ class HistoricCSVDataHandler(DataHandler):
            else:
                 try:
                     pd.to_datetime(temp.columns[0],unit='s')
+                    self.symbol_data[s] = pd.io.parsers.read_csv(
+                    os.path.join(self.csv_dir, '%s.csv' % s),
+                    header=0, index_col=0, parse_dates=True,
+                    names=[
+                        'unix', 'open', 'high', 
+                        'low', 'close', 'volume','trades'
+                    ]
+                )   
+                    self.symbol_data[s]['unix']= pd.to_datetime(self.symbol_data[s]['unix'],unit='s')
                     break
                 except ValueError:
                     print('not kraken format')     

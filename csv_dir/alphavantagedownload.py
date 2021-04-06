@@ -21,13 +21,13 @@ s=open('GOOG.csv')
 
 import pandas as pd
 
-dfalphavantage = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/GOOG.csv')
+dfalphavantage = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/GOOG.csv',index_col=0,header=0)
 print (dfalphavantage)
 
 dfkrakenOHLCV = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/XBTUSD_1440m_daily.csv', names=[
                     'unix', 'open', 'high', 
                     'low', 'close', 'volume','trades'
-                ])
+                ],header=0)
 
 dfkrakenOHLCV = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/XBTUSD_1440m_daily.csv')
 
