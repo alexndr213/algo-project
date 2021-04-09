@@ -93,13 +93,13 @@ class MovingAverageCrossStrategy(Strategy):
                         self.events.put(signal)
                         self.bought[s] = 'OUT'
 
-
+#%% run backtest
 if __name__ == "__main__":
-    csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  # CHANGE THIS!
-    symbol_list = ['GOOG']
+    csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
+    symbol_list = ['XBTUSD']
     initial_capital = 100000.0
     heartbeat = 0.0
-    start_date = datetime.datetime(2014, 1, 1, 0, 0, 0)
+    start_date = datetime.datetime(2013, 10, 7, 0, 0, 0)
 
     backtest = Backtest(
         csv_dir, symbol_list, initial_capital, heartbeat, 

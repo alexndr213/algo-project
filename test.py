@@ -57,7 +57,7 @@ account_balance=k.get_account_balance()
 print(account_balance)
 
 # s=k.get_order_book(XBTUSD,10)
-df=k.get_ohlc_data('XBTUSD',240)
+df=k.get_ohlc_data('XBTUSD',1440)
 df, last = k.get_recent_trades("XBTUSD", ascending=True)
 
 

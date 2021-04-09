@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 from event import FillEvent, OrderEvent
-from performance import create_sharpe_ratio, create_drawdowns
+from performance import create_sharpe_ratio, create_drawdowns,monte_carlo
 
 
 class Portfolio(object):
@@ -235,26 +235,28 @@ class Portfolio(object):
         """
         curve = pd.DataFrame(self.all_holdings)
         curve.set_index('datetime', inplace=True)
-        curve['returns'] = curve['total'].pct_change()
-        curve['equity_curve'] = (1.0+curve['returns']).cumprod()
+        curve['returns_pct'] = curve['total'].pct_change()
+        curve['equity_curve_pct'] = (1.0+curve['returns_pct']).cumprod()
+        
         self.equity_curve = curve
-
+        # returns = self.equity_curve['returns_pct']
+        # curve['monte_carlo_walk'],curve['monte_carlo_final_values']=monte_carlo(returns)
+        # self.equity_curve = curve
     def output_summary_stats(self):
         """
         Creates a list of summary statistics for the portfolio.
         """
-        total_return = self.equity_curve['equity_curve'][-1]
-        returns = self.equity_curve['returns']
-        pnl = self.equity_curve['equity_curve']
-
+        total_return = self.equity_curve['equity_curve_pct'][-1]
+        returns = self.equity_curve['returns_pct']
+        pnl = self.equity_curve['equity_curve_pct']
+        
         sharpe_ratio = create_sharpe_ratio(returns)
         drawdown, max_dd, dd_duration = create_drawdowns(pnl)
-        self.equity_curve['drawdown'] = drawdown
+        self.equity_curve['drawdown_pct'] = drawdown
 
         stats = [("Total Return", "%0.2f%%" % ((total_return - 1.0) * 100.0)),
                  ("Sharpe Ratio", "%0.2f" % sharpe_ratio),
                  ("Max Drawdown", "%0.2f%%" % (max_dd * 100.0)),
                  ("Drawdown Duration", "%d" % dd_duration)]
-
-        self.equity_curve.to_csv('equity.csv')
+        self.equity_curve.to_csv('backtest_result.csv')
         return stats
