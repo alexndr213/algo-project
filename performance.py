@@ -42,7 +42,7 @@ def create_sharpe_ratio(returns, periods=252):
 #     mc_sims_results = mc_analysis(results, start_equity=100000, ruin_equity=40000)
 #     return mc_sims_results
 
-def monte_carlo(sims=5,risk_of_ruin=0.4):
+def monte_carlo(sims=5,ruin_pct=0.4):
     data = pd.io.parsers.read_csv(
        '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
        parse_dates=True, index_col=0
@@ -50,21 +50,27 @@ def monte_carlo(sims=5,risk_of_ruin=0.4):
     profit_results = data['returns_pct']
     profit_results=profit_results[profit_results!=0]
     profit_results=profit_results.iloc[1:]
-    final_value=[]
+    ruins=0
     pricewalk=[]
     temp=[]
-    drawdown=[]
-    max_dd=[]
-    dd_duration=[]
+    drawdown_list=[]
+    max_dd_list=[]
+    dd_duration_list=[]
     for i in range (0,sims):
         temp=[1]
         temp.extend(profit_results.sample(n=len(profit_results),axis=0,replace=False).tolist())
         temp=np.cumsum(temp)
         pricewalk.append(temp)
-        final_value.append(temp[-1])
-        # dd, mdd, dd_d=create_drawdowns(pd.DataFrame(temp),index=profit_results.index)
-   
-    # pnl = data['equity_curve_pct']
+        pdtemp=pd.Series(
+            temp[1:],index=profit_results.index,
+            ).sort_index(ascending=True)
+        dd, mdd, dd_d=create_drawdowns(pdtemp)
+        drawdown_list.append(dd)
+        if mdd>ruin_pct:
+            ruins+=1
+        max_dd_list.append(mdd)
+        dd_duration_list.append(dd_d)
+    
     for i in range(0,sims):
         plt.plot(pricewalk[i])
         
