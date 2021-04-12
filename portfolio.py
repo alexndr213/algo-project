@@ -200,7 +200,7 @@ class Portfolio(object):
         direction = signal.signal_type
         strength = signal.strength
 
-        mkt_quantity = 100
+        mkt_quantity = 1
         cur_quantity = self.current_positions[symbol]
         order_type = 'MKT'
 
@@ -239,9 +239,7 @@ class Portfolio(object):
         curve['equity_curve_pct'] = (1.0+curve['returns_pct']).cumprod()
         
         self.equity_curve = curve
-        # returns = self.equity_curve['returns_pct']
-        # curve['monte_carlo_walk'],curve['monte_carlo_final_values']=monte_carlo(returns)
-        # self.equity_curve = curve
+      
     def output_summary_stats(self):
         """
         Creates a list of summary statistics for the portfolio.

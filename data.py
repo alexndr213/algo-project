@@ -135,7 +135,7 @@ class HistoricCSVDataHandler(DataHandler):
                    'datetime', 'open', 'high', 
                    'low', 'close', 'volume'
                    ]
-                   )
+                   ).sort_values(by='datetime', ascending = True)
            except:
                print('not AV format')
           

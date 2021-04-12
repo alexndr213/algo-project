@@ -21,7 +21,8 @@ s=open('GOOG.csv')
 
 import pandas as pd
 
-dfalphavantage = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/GOOG.csv',index_col=0,header=0,parse_dates=True)
+dfalphavantage = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/GOOG.csv',index_col=0,header=0,parse_dates=True).sort_values(
+    by='date', ascending = True)
 print (dfalphavantage)
 
 dfkrakenOHLCV = pd.read_csv (r'~/Documents/skola/finproj/algo-project/csv_dir/XBTUSD.csv', names=[

@@ -17,7 +17,10 @@ if __name__ == "__main__":
     data = pd.io.parsers.read_csv(
         '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
         parse_dates=True, index_col=0
-    )
+    ).sort_values(by='datetime')
+    
+    
+    # monte_carlo(sims,risk_of_ruin):
     
     data['equity_curve_pct'].plot(ylabel='portfolio value %',color="blue", lw=1.)
     plt.grid(True)
