@@ -7,7 +7,7 @@ import datetime
 
 import numpy as np
 import pandas as pd
-from pandas.io.data import DataReader
+from pandas_datareader import DataReader
 
 
 def create_lagged_series(symbol, start_date, end_date, lags=5):

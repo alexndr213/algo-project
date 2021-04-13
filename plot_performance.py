@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pandas import DataFrame
 from mc_sim_fin.mc import mc_analysis
-from performance import monte_carlo
+from performance import monte_carlo,buy_N_hold
 
 
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     ).sort_values(by='datetime')
     
     
-    # monte_carlo(sims,risk_of_ruin):
+    
     
     data['equity_curve_pct'].plot(ylabel='portfolio value %',color="blue", lw=1.)
     plt.grid(True)
@@ -33,5 +33,6 @@ if __name__ == "__main__":
     data['drawdown_pct'].plot(ylabel='drawdown %', color="green", lw=1.)
     plt.grid(True)
     plt.show()
-
+    
+    print("returns of buy and hold from date of first trade to last trade=",buy_N_hold()*100,"%")
     print(monte_carlo())

@@ -139,6 +139,22 @@ class HistoricCSVDataHandler(DataHandler):
            except:
                print('not AV format')
           
+             #checks if content is yhoo format
+           try:
+               columncheck=temp.columns==['Date', 'Open', 'High', 'Low', 'Close','Adj Close', 'Volume']
+               if columncheck.all():
+                   # Load the CSV file with no header information, indexed on date for alphavantage
+                   self.symbol_data[s] = pd.io.parsers.read_csv(
+                   os.path.join(self.csv_dir, '%s.csv' % s),
+                   header=0, index_col=0, parse_dates=True,
+                   names=[
+                   'datetime', 'open', 'high', 
+                   'low', 'close','adj close', 'volume'
+                   ]
+                   ).sort_values(by='datetime', ascending = True)
+           except:
+               print('not yahoo format')  
+          
             # kraken format
            try:
                 #tries to convert first from unix to datetime if error, is not kraken format

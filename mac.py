@@ -27,7 +27,7 @@ class MovingAverageCrossStrategy(Strategy):
     """
 
     def __init__(
-        self, bars, events, short_window=20, long_window=100
+        self, bars, events, short_window=20, long_window=50
     ):
         """
         Initialises the Moving Average Cross Strategy.
@@ -96,7 +96,7 @@ class MovingAverageCrossStrategy(Strategy):
 #%% run backtest
 if __name__ == "__main__":
     csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
-    symbol_list = ['GOOG']
+    symbol_list = ['XBTUSD']
     initial_capital = 100000.0
     heartbeat = 0.0
     start_date = datetime.datetime(2014, 3, 27, 0, 0, 0)

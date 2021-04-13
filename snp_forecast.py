@@ -8,8 +8,7 @@ from __future__ import print_function
 import datetime
 
 import pandas as pd
-from sklearn.qda import QDA
-
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from strategy import Strategy
 from event import SignalEvent
 from backtest import Backtest
@@ -61,7 +60,7 @@ class SPYDailyForecastStrategy(Strategy):
         y_train = y[y.index < start_test]
         y_test = y[y.index >= start_test]
        
-        model = QDA()
+        model = QuadraticDiscriminantAnalysis()
         model.fit(X_train, y_train)
         return model
 
@@ -84,6 +83,7 @@ class SPYDailyForecastStrategy(Strategy):
                         'Lag2': lags[2]*100.0
                     }
                 )
+                # pred_series.reshape(-1,1)
                 pred = self.model.predict(pred_series)
                 if pred > 0 and not self.long_market:
                     self.long_market = True
@@ -97,7 +97,7 @@ class SPYDailyForecastStrategy(Strategy):
 
 
 if __name__ == "__main__":
-    csv_dir = '/path/to/your/csv/file'  # CHANGE THIS!
+    csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  # CHANGE THIS!
     symbol_list = ['SPY']
     initial_capital = 100000.0
     heartbeat = 0.0

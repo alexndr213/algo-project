@@ -8,11 +8,20 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 import random
-from mc_sim_fin.mc import mc_analysis
 import matplotlib.pyplot as plt
+from data import HistoricCSVDataHandler
 
-
-# def buy_N_hold()
+def buy_N_hold():
+    data = pd.io.parsers.read_csv(
+       '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
+       parse_dates=True, index_col=0
+    )
+    name=data.columns[0]
+    temp=data[name]
+    temp=temp[temp!=0]
+    percentage_return=temp.iloc[-1]/temp.iloc[0]
+    
+    return percentage_return
 
 def create_sharpe_ratio(returns, periods=252):
     """
@@ -27,22 +36,7 @@ def create_sharpe_ratio(returns, periods=252):
     return np.sqrt(periods) * (np.mean(returns)) / np.std(returns)
 
 
-
-# def monte_carlo():
-#     data = pd.io.parsers.read_csv(
-#         '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
-#         parse_dates=True, index_col=0
-#     )
-#     profit_results = data['returns_pct']
-#     profit_results=profit_results[profit_results!=0]
-#     profit_results=profit_results.iloc[1:]
-#     date_results=profit_results.index.tolist()
-#     profit_results=profit_results.to_numpy()
-#     results = pd.DataFrame({'date_results': date_results, 'profit_results': profit_results})
-#     mc_sims_results = mc_analysis(results, start_equity=100000, ruin_equity=40000)
-#     return mc_sims_results
-
-def monte_carlo(sims=5,ruin_pct=0.4):
+def monte_carlo(sims=100,ruin_pct=0.6):
     data = pd.io.parsers.read_csv(
        '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
        parse_dates=True, index_col=0
@@ -66,14 +60,18 @@ def monte_carlo(sims=5,ruin_pct=0.4):
             ).sort_index(ascending=True)
         dd, mdd, dd_d=create_drawdowns(pdtemp)
         drawdown_list.append(dd)
-        if mdd>ruin_pct:
+        if mdd>1-ruin_pct:
             ruins+=1
         max_dd_list.append(mdd)
-        dd_duration_list.append(dd_d)
-    
+        # dd_duration_list.append(dd_d)
+    print('risk of ruin=',ruins/sims,
+          '\nmedian of max drawdown=', np.median(max_dd_list),
+          '\nmedian return=',np.median(profit_results),
+          '\nmedian return/max drawdown=',np.median(profit_results)/np.median(max_dd_list))
     for i in range(0,sims):
-        plt.plot(pricewalk[i])
-        
+        plt.plot(pricewalk[i],lw=.5)
+    
+    plt.plot(np.cumsum(profit_results.tolist())+1,lw=2)
     plt.show()    
     
 def create_drawdowns(pnl):
@@ -95,8 +93,8 @@ def create_drawdowns(pnl):
 
     # Create the drawdown and duration series
     idx = pnl.index
-    drawdown = pd.Series(index = idx)
-    duration = pd.Series(index = idx)
+    drawdown = pd.Series(index = idx,dtype='float64')
+    duration = pd.Series(index = idx,dtype='float64')
     
     # Loop over the index range
     for t in range(1, len(idx)):
