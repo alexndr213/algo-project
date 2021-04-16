@@ -1,14 +1,15 @@
 import datetime
 import time
-from ib.ext.Contract import Contract
-from ib.ext.Order import Order
-from ib.opt import ibConnection, message
+
+import krakenex
+from pykrakenapi import KrakenAPI
+
 from event import FillEvent, OrderEvent
 from execution import ExecutionHandler
 
-class IBExecutionHandler(ExecutionHandler):
+class KrakenExecutionHandler(ExecutionHandler):
     """ NEED MODIFICATIONS FOR KRAKEN API
-    Handles order execution via the Interactive Brokers
+    Handles order execution via Kraken
     API, for use against accounts when trading live
     directly. 
     """
@@ -19,7 +20,6 @@ class IBExecutionHandler(ExecutionHandler):
         Initialises the IBExecutionHandler instance.
         """
         self.events = events
-        self.order_routing = order_routing
         self.currency = currency
         self.fill_dict = {}
         self.tws_conn = self.create_tws_connection()
@@ -56,8 +56,13 @@ class IBExecutionHandler(ExecutionHandler):
         separate IDs for both the execution connection and
         market data connection, if the latter is used elsewhere.
         """
-        tws_conn = ibConnection()
-        tws_conn.connect()
+        with open('/home/alex/Documents/skola/finproj/key.txt') as f:
+            key = f.read()
+        with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
+            secret = f.read()
+        
+        api = krakenex.API(key.rstrip(), secret.rstrip())
+        tws_conn = KrakenAPI(api)
         return tws_conn
 
 

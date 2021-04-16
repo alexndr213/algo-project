@@ -30,7 +30,7 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.show()
     
-    data['drawdown_pct'].plot(ylabel='drawdown %', color="green", lw=1.)
+    data['drawdown_pct'].plot(ylabel='drawdown %', color="red", lw=1.)
     plt.grid(True)
     plt.show()
     

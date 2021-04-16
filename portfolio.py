@@ -184,7 +184,38 @@ class Portfolio(object):
         if event.type == 'FILL':
             self.update_positions_from_fill(event)
             self.update_holdings_from_fill(event)
+    
+    
+    def generate_order(self, signal):
+        """
+        Simply files an Order object as a constant quantity
+        sizing of the signal object, without risk management or
+        position sizing considerations.
 
+        Parameters:
+        signal - The tuple containing Signal information.
+        """
+        order = None
+
+        symbol = signal.symbol
+        direction = signal.signal_type
+        strength = signal.strength
+
+        mkt_quantity = 1
+        cur_quantity = self.current_positions[symbol]
+        order_type = 'MKT'
+
+        if direction == 'LONG' and cur_quantity == 0:
+            order = OrderEvent(symbol, order_type, mkt_quantity, 'BUY')
+        if direction == 'SHORT' and cur_quantity == 0:
+            order = OrderEvent(symbol, order_type, mkt_quantity, 'SELL')   
+    
+        if direction == 'EXIT' and cur_quantity > 0:
+            order = OrderEvent(symbol, order_type, abs(cur_quantity), 'SELL')
+        if direction == 'EXIT' and cur_quantity < 0:
+            order = OrderEvent(symbol, order_type, abs(cur_quantity), 'BUY')
+        return order        
+    
     def generate_naive_order(self, signal):
         """
         Simply files an Order object as a constant quantity

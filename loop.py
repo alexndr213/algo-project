@@ -1,11 +1,12 @@
-# Declare the components with respective parameters
-bars = DataHandler(..)
+from data import LiveKrakenDataHandlerDataHandler
+from Strategy import mac
+bars = DataHandler()
 strategy = Strategy(..)
 port = Portfolio(..)
 broker = ExecutionHandler(..)
 
 while True:
-    # Update the bars (specific backtest code, as opposed to live trading)
+    Update the bars (specific backtest code, as opposed to live trading)
     if bars.continue_backtest == True:
         bars.update_bars()
     else:

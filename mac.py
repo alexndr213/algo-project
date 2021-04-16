@@ -97,7 +97,7 @@ class MovingAverageCrossStrategy(Strategy):
 if __name__ == "__main__":
     csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
     symbol_list = ['XBTUSD']
-    initial_capital = 100000.0
+    initial_capital = 2000.0
     heartbeat = 0.0
     start_date = datetime.datetime(2014, 3, 27, 0, 0, 0)
 
