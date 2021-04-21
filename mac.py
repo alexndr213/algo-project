@@ -67,6 +67,7 @@ class MovingAverageCrossStrategy(Strategy):
         """
         if event.type == 'MARKET':
             for s in self.symbol_list:
+                print(s)
                 bars = self.bars.get_latest_bars_values(
                     s, "close", N=self.long_window
                 )

@@ -90,7 +90,7 @@ class KrakenExecutionHandler(ExecutionHandler):
     directly. 
     """
     def __init__(
-        self, events,  currency="ZEUR"
+        self, events,  currency="ZEUR",val=True
         ):
         """
         Initialises the IBExecutionHandler instance.
@@ -98,8 +98,8 @@ class KrakenExecutionHandler(ExecutionHandler):
         self.events = events
         self.currency = currency
         self.create_kraken_connection()
-    
-        # c.add_standard_order(pair,'sell', 'market', volume=0.0002,validate=val)
+        self.val=val
+        
     
     def create_kraken_connection(self):
         """
@@ -120,32 +120,10 @@ class KrakenExecutionHandler(ExecutionHandler):
 
     
     
-    def create_fill(self, msg):
-        """
-        Handles the creation of the FillEvent that will be
-        placed onto the events queue subsequent to an order
-        being filled.
-        """
-        fd = self.fill_dict[msg.orderId]
-        # Prepare the fill data
-        symbol = fd["symbol"]
-        exchange = fd["exchange"]
-        filled = msg.filled
-        direction = fd["direction"]
-        fill_cost = msg.avgFillPrice
-        # Create a fill event object
-        fill_event = FillEvent(
-        datetime.datetime.utcnow(), symbol,
-        exchange, filled, direction, fill_cost
-        )
-        # Make sure that multiple messages don't create
-        # additional fills. 
-        self.fill_dict[msg.orderId]["filled"] = True
-        # Place the fill event onto the event queue
-        self.events.put(fill_event)
+
         
         
-    def execute_order(self, event):
+    def execute_order(self, event,val):
         """
         Creates the necessary InteractiveBrokers order object
         and submits it to IB via their API.
@@ -164,24 +142,24 @@ class KrakenExecutionHandler(ExecutionHandler):
             quantity = event.quantity
             direction = event.direction
             
-            orderinfo=self.connection.add_standard_order(asset,ordertype=order_type,type=direction,volume=quantity)
+            orderinfo=self.connection.add_standard_order(asset,ordertype=order_type,type=direction,volume=quantity,validate=val)
             # orderinfo=c.add_standard_order(pair,type='sell',ordertype='market',volume=0.0002,validate=val)
             orderdescription=orderinfo['descr']['order']
             try:
                 orderID=orderinfo['txid']
                 fill_event = FillEvent(
                 datetime.datetime.utcnow(), asset,
-                'kraken', orderID, direction, None
+                'kraken', orderID, direction, commission=None
                 )
-                FillEvent()
+            
             except ValueError:
                 print('order did not go through, check order validate set to FALSE, creating placeholder FIll object')
-            fill_event = FillEvent(
-            datetime.datetime.utcnow(), asset,
-            exchange='test', filled, direction, fill_cost
-            )
+                
+            else:    
+                fill_event = FillEvent(timeindex=
+                datetime.datetime.utcnow(), symbol=asset,
+                exchange='test', fill_cost=1, direction=direction, commission=None
+                )
             
-            self, timeindex, symbol, exchange, quantity, 
-                 direction, fill_cost, commission=None):
-    
+          
             self.events.put(fill_event)

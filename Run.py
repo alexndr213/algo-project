@@ -74,7 +74,7 @@ class Run(object):
         print(
             "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
         )
-        self.data_handler = self.data_handler_cls(self.events, self.csv_dir, self.symbol_list)
+        self.data_handler = self.data_handler_cls(self.events,self.symbol_list)
         self.strategy = self.strategy_cls(self.data_handler, self.events)
         self.portfolio = self.portfolio_cls(self.data_handler, self.events, self.start_date, 
                                             self.initial_capital)
@@ -85,6 +85,7 @@ class Run(object):
         Executes the backtest.
         """
         self.data_handler.load_symbol_data_from_kraken(self.symbol_list)
+        print(self.symbol_list)
         i = 0
         while True:
             i += 1
@@ -140,17 +141,18 @@ class Run(object):
         """
         Simulates the backtest and outputs portfolio performance.
         """
-        self._run_backtest()
+        self._run_()
         self._output_performance()
 
 
 #%% run 
 if __name__ == "__main__":
     
-    symbol_list = ['XBTUSD']
+    symbol_list = ['XXBTZEUR']
     initial_capital = 2000.0
-    heartbeat = 24*60
+    heartbeat = 60
     start_date = datetime.now
+    val=True #Setting this to FALSE will enable live trading
 
     run = Run(
         symbol_list, initial_capital, heartbeat, 
