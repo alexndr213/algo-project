@@ -201,7 +201,7 @@ class Portfolio(object):
         direction = signal.signal_type
         strength = signal.strength
 
-        mkt_quantity = 1
+        mkt_quantity = 0.0002
         cur_quantity = self.current_positions[symbol]
         order_type = 'MKT'
 
@@ -231,7 +231,7 @@ class Portfolio(object):
         direction = signal.signal_type
         strength = signal.strength
 
-        mkt_quantity = 1
+        mkt_quantity = 0.0002
         cur_quantity = self.current_positions[symbol]
         order_type = 'MKT'
 

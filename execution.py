@@ -90,20 +90,18 @@ class KrakenExecutionHandler(ExecutionHandler):
     directly. 
     """
     def __init__(
-        self, events, order_routing="SMART", currency="USD"
+        self, events,  currency="ZEUR"
         ):
         """
         Initialises the IBExecutionHandler instance.
         """
         self.events = events
         self.currency = currency
-        self.fill_dict = {}
-        self.tws_conn = self.create_tws_connection()
-        self.order_id = self.create_initial_order_id()
-        self.register_handlers()
-        
+        self.create_kraken_connection()
     
-    def create_tws_connection(self):
+        # c.add_standard_order(pair,'sell', 'market', volume=0.0002,validate=val)
+    
+    def create_kraken_connection(self):
         """
         Connect to the Trader Workstation (TWS) running on the
         usual port of 7496, with a clientId of 10.
@@ -117,78 +115,11 @@ class KrakenExecutionHandler(ExecutionHandler):
             secret = f.read()
         
         api = krakenex.API(key.rstrip(), secret.rstrip())
-        tws_conn = KrakenAPI(api)
-        return tws_conn
+        kraken_conn = KrakenAPI(api)
+        return kraken_conn
 
-
-    def create_initial_order_id(self):
-        """
-        Creates the initial order ID used for Interactive
-        Brokers to keep track of submitted orders.
-        """
-        # There is scope for more logic here, but we
-        # will use "1" as the default for now.
-        return 1    
-    
-    def register_handlers(self):
-        """
-        Register the error and server reply
-        message handling functions.
-        """
-        # Assign the error handling function defined above
-        # to the TWS connection
-        self.tws_conn.register(self._error_handler, 'Error')
-        # Assign all of the server reply messages to the
-        # reply_handler function defined above
-        self.tws_conn.registerAll(self._reply_handler)
-        
-    def create_contract(self, symbol, sec_type, exch, prim_exch, curr):
-        """
-        Create a Contract object defining what will
-        be purchased, at which exchange and in which currency.
-        symbol - The ticker symbol for the contract
-        sec_type - The security type for the contract ('STK' is 'stock')
-        exch - The exchange to carry out the contract on
-        prim_exch - The primary exchange to carry out the contract on
-        curr - The currency in which to purchase the contract
-        """
-        contract = Contract()
-        contract.m_symbol = symbol
-        contract.m_secType = sec_type
-        contract.m_exchange = exch
-        contract.m_primaryExch = prim_exch
-        contract.m_currency = curr
-        return contract
     
     
-    def create_order(self, order_type, quantity, action):
-        """
-        Create an Order object (Market/Limit) to go long/short.
-        order_type - 'MKT', 'LMT' for Market or Limit orders229
-        quantity - Integral number of assets to order
-        action - 'BUY' or 'SELL'
-        """
-        order = Order()
-        order.m_orderType = order_type
-        order.m_totalQuantity = quantity
-        order.m_action = action
-        return order
-    
-    def create_fill_dict_entry(self, msg):
-        """
-        Creates an entry in the Fill Dictionary that lists
-        orderIds and provides security information. This is
-        needed for the event-driven behaviour of the IB
-        server message behaviour.
-        """
-        self.fill_dict[msg.orderId] = {
-        "symbol": msg.contract.m_symbol,
-        "exchange": msg.contract.m_exchange,
-        "direction": msg.order.m_action,
-        "filled": False
-        }
-        
-        
     def create_fill(self, msg):
         """
         Handles the creation of the FillEvent that will be
@@ -224,30 +155,33 @@ class KrakenExecutionHandler(ExecutionHandler):
         Parameters:
         event - Contains an Event object with order information.
         """
+        
+        # OrderEvent(symbol, order_type, abs(cur_quantity), 'BUY')
         if event.type == 'ORDER':
             # Prepare the parameters for the asset order
             asset = event.symbol
-            asset_type = "STK"
             order_type = event.order_type
             quantity = event.quantity
             direction = event.direction
-            # Create the Interactive Brokers contract via the
-            # passed Order event
-            ib_contract = self.create_contract(
-            asset, asset_type, self.order_routing,
-            self.order_routing, self.currency
+            
+            orderinfo=self.connection.add_standard_order(asset,ordertype=order_type,type=direction,volume=quantity)
+            # orderinfo=c.add_standard_order(pair,type='sell',ordertype='market',volume=0.0002,validate=val)
+            orderdescription=orderinfo['descr']['order']
+            try:
+                orderID=orderinfo['txid']
+                fill_event = FillEvent(
+                datetime.datetime.utcnow(), asset,
+                'kraken', orderID, direction, None
+                )
+                FillEvent()
+            except ValueError:
+                print('order did not go through, check order validate set to FALSE, creating placeholder FIll object')
+            fill_event = FillEvent(
+            datetime.datetime.utcnow(), asset,
+            exchange='test', filled, direction, fill_cost
             )
-            # Create the Interactive Brokers order via the
-            # passed Order event
-            ib_order = self.create_order(
-            order_type, quantity, direction
-            )
-            # Use the connection to the send the order to IB
-            self.tws_conn.placeOrder(
-            self.order_id, ib_contract, ib_order
-            )
-            # NOTE: This following line is crucial.
-            # It ensures the order goes through!
-            time.sleep(1)
-            # Increment the order ID for this session
-            self.order_id += 1
+            
+            self, timeindex, symbol, exchange, quantity, 
+                 direction, fill_cost, commission=None):
+    
+            self.events.put(fill_event)

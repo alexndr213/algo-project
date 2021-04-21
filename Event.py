@@ -118,30 +118,22 @@ class FillEvent(Event):
         self.fill_cost = fill_cost
 
         # Calculate commission
-        if commission is None:
-            self.commission = self.calculate_ib_commission()
+        if exchange == 'kraken':
+            self.commission = self.calculate_kraken_commission()
         else:
             self.commission = commission
 
-    def calculate_ib_commission(self):
+    def calculate_kraken_commission(self):
         """
-        Calculates the fees of trading based on an Interactive
-        Brokers fee structure for API, in USD.
+        Gives kraken fixes 0.26% taker fee
 
-        This does not include exchange or ECN fees.
-
-        Based on "US API Directed Orders":
-        https://www.interactivebrokers.com/en/index.php?f=commission&p=stocks2
         
         
       NEED EDITING
       
       
         """
-        full_cost = 1.3
-        if self.quantity <= 500:
-            full_cost = max(1.3, 0.013 * self.quantity)
-        else: # Greater than 500
-            full_cost = max(1.3, 0.008 * self.quantity)
-        full_cost = min(full_cost, 0.5 / 100.0 * self.quantity * self.fill_cost)
+        
+        full_cost = 0.026 * self.quantity
+        
         return full_cost            

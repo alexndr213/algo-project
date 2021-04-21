@@ -1,22 +1,35 @@
-from data import LiveKrakenDataHandlerDataHandler
-from Strategy import mac
-bars = DataHandler()
-strategy = Strategy(..)
-port = Portfolio(..)
-broker = ExecutionHandler(..)
+from strategy import Strategy
+from event import SignalEvent
+
+try:
+    import Queue as queue
+except ImportError:
+    import queue
+
+from portfolio import Portfolio
+from data import LiveKrakenDataHandler
+from mac import MovingAverageCrossStrategy
+from portfolio import Portfolio
+from execution import KrakenExecutionHandler
+import time
+
+
+bars = LiveKrakenDataHandler()
+strategy = MovingAverageCrossStrategy()
+port = Portfolio()
+broker = KrakenExecutionHandler
+events = queue.Queue()
 
 while True:
-    Update the bars (specific backtest code, as opposed to live trading)
-    if bars.continue_backtest == True:
-        bars.update_bars()
-    else:
-        break
+    #if new bar gives market event
+    bars.update_bars()
+
     
     # Handle the events
     while True:
         try:
             event = events.get(False)
-        except Queue.Empty:
+        except queue.Empty:
             break
         else:
             if event is not None:

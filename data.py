@@ -8,9 +8,13 @@ from __future__ import print_function
 from abc import ABCMeta, abstractmethod
 import datetime
 import os, os.path
-
+import time
 import numpy as np
 import pandas as pd
+try:
+    import Queue as queue
+except ImportError:
+    import queue
 
 from event import MarketEvent
 import krakenex
@@ -187,8 +191,9 @@ class HistoricCSVDataHandler(DataHandler):
                  index=comb_index, method='pad'
              )
              self.symbol_data[s]["returns"] = self.symbol_data[s]["close"].pct_change()
-             self.symbol_data[s] = self.symbol_data[s].iterrows()
              print(self.symbol_data[s])
+             self.symbol_data[s] = self.symbol_data[s].iterrows()
+        # print(self.symbol_data[s])
 
 
 
@@ -280,10 +285,13 @@ class HistoricCSVDataHandler(DataHandler):
                 self.continue_backtest = False
             else:
                 if bar is not None:
+                    # print(self.latest_symbol_data[s])
                     self.latest_symbol_data[s].append(bar)
         self.events.put(MarketEvent())
 
 class LiveKrakenDataHandler(DataHandler):
+    
+   
     
     def __init__(self, events, symbol_list):
             """    
@@ -292,33 +300,50 @@ class LiveKrakenDataHandler(DataHandler):
             
             symbol_list - A list of symbol strings.
             """
-            with open('/home/alex/Documents/skola/finproj/key.txt') as f:
-                key = f.read()
-            with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
-                secret = f.read()
-        
-            api = krakenex.API(key.rstrip(), secret.rstrip())
-            c = KrakenAPI(api)
+           
             self.events = events
             self.symbol_list = symbol_list
             self.symbol_data = {}
             self.latest_symbol_data = {}
             self.continue_backtest = True       
             self.bar_index = 0
-            self.conn=c
-            
+            self.last=0 #unixtime of last data pull
     
     def load_symbol_data_from_kraken(self,symbol_list):
+        with open('/home/alex/Documents/skola/finproj/key.txt') as f:
+                key = f.read()
+        with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
+             secret = f.read()
+            
+        api = krakenex.API(key.rstrip(), secret.rstrip())
+        connection = KrakenAPI(api)
+        
+        comb_index=None
         for s in self.symbol_list:
-            self.symbol_data[s]=self.get_ohlc_data(s, interval=1440, since=None, ascending=False)[0]
+            self.symbol_data[s],self.last=connection.get_ohlc_data(s, interval=1440, since=None, ascending=False)
+            if len(self.symbol_list)>0:
+                time.sleep(2)
         
+        if comb_index is None:
+                comb_index = self.symbol_data[s].index
+        else:
+                comb_index.union(self.symbol_data[s].index)
+                # Set the latest symbol_data to None
+                self.latest_symbol_data[s] = []
+    
+        for s in self.symbol_list:
+             self.symbol_data[s] = self.symbol_data[s].reindex(
+                 index=comb_index, method='pad'
+             )
+             self.symbol_data[s]["returns"] = self.symbol_data[s]["close"].pct_change()
+           
         
+       
     def _get_new_bar(self, symbol):
         """
         Returns the latest bar from the data feed.
         """
         for b in self.symbol_data[symbol]:
-            # print(b)
             yield b
 
     def get_latest_bar(self, symbol):
@@ -371,8 +396,6 @@ class LiveKrakenDataHandler(DataHandler):
             print("That symbol is not available in the historical data set.")
             raise
         else:
-            # s=getattr(bars_list[-1][1], val_type)
-            # print(s)
             return getattr(bars_list[-1][1], val_type)
 
     def get_latest_bars_values(self, symbol, val_type, N=1):
@@ -389,17 +412,21 @@ class LiveKrakenDataHandler(DataHandler):
             print(bars_list)
             return np.array([getattr(b[1], val_type) for b in bars_list])
 
-    def update_bars(self):
+    def update_bars(self,symbol_list):
         """
         Pushes the latest bar to the latest_symbol_data structure
         for all symbols in the symbol list.
         """
-        for s in self.symbol_list:
-            try:
-                bar = next(self._get_new_bar(s))
-            except StopIteration:
-                self.continue_backtest = False
-            else:
-                if bar is not None:
-                    self.latest_symbol_data[s].append(bar)
+        for s in symbol_list:
+            bar,last=self.connection.get_ohlc_data(s, interval=1440, since=self.last, ascending=False)
+            if bar.iloc[0]!=self.symbol_data[s].iloc[0]:
+                self.latest_symbol_data[s].append(bar)
+        self.last=last        
         self.events.put(MarketEvent())
+        
+# %%% test
+if __name__ == '__main__':
+    events = queue.Queue()
+    symbol_list = ['XBTUSD']
+    s=LiveKrakenDataHandler(events, symbol_list).load_symbol_data_from_kraken
+    s(symbol_list)

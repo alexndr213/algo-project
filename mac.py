@@ -10,7 +10,6 @@ import datetime
 import numpy as np
 import pandas as pd
 
-
 from strategy import Strategy
 from event import SignalEvent
 from backtest import Backtest
