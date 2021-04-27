@@ -270,7 +270,7 @@ class HistoricCSVDataHandler(DataHandler):
             print("That symbol is not available in the historical data set.")
             raise
         else:
-            print(bars_list)
+            
             return np.array([getattr(b[1], val_type) for b in bars_list])
 
     def update_bars(self):
@@ -293,7 +293,7 @@ class LiveKrakenDataHandler(DataHandler):
     
    
     
-    def __init__(self, events, symbol_list):
+    def __init__(self, events, symbol_list,ohlc_time):
             """    
             Parameters:
             events - The Event Queue.
@@ -313,25 +313,18 @@ class LiveKrakenDataHandler(DataHandler):
             self.events = events
             self.symbol_list = symbol_list
             self.symbol_data = {}
-            self.latest_symbol_data = {}
-            self.continue_backtest = True       
+            self.latest_symbol_data = {}     
             self.bar_index = 0
+            self.ohlc_time=ohlc_time
             self.last=0 #unixtime of last data pull
             
             
        
     def load_symbol_data_from_kraken(self,symbol_list):
-        # with open('/home/alex/Documents/skola/finproj/key.txt') as f:
-        #         key = f.read()
-        # with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
-        #       secret = f.read()
-            
-        # api = krakenex.API(key.rstrip(), secret.rstrip())
-        # connection = KrakenAPI(api)
- 
+        
         comb_index=None
         for s in self.symbol_list:
-            self.symbol_data[s],self.last=self.connection.get_ohlc_data(s, interval=1440, since=None, ascending=False)
+            self.symbol_data[s],self.last=self.connection.get_ohlc_data(s, interval=self.ohlc_time, since=None, ascending=True)
             if len(self.symbol_list)>0:
                 time.sleep(2)
         
@@ -346,37 +339,16 @@ class LiveKrakenDataHandler(DataHandler):
              self.symbol_data[s] = self.symbol_data[s].reindex(
                  index=comb_index, method='pad'
              )
-             # self.symbol_data[s]["returns"] = self.symbol_data[s]["close"].pct_change()
-           
-        print(self.symbol_data[s].iloc[0])
+        
        
-    def _get_new_bar(self, symbol):
-        """
-        Returns the latest bar from the data feed.
-        """
-        for b in self.symbol_data[symbol]:
-            yield b
-
-    def get_latest_bar(self, symbol):
-        """
-        Returns the last bar from the latest_symbol list. används inte?
-        """
-        try:
-            bars_list = self.latest_symbol_data[symbol]
-        except KeyError:
-            print("That symbol is not available in the historical data set.")
-            raise
-        else:
-            return bars_list[-1]
-
     def get_latest_bars(self, symbol, N=1):
         """
         Returns the last N bars from the latest_symbol list,
         or N-k if less available.
         """
-        print(symbol)
+        # print(symbol)
         try:
-            bars_list = self.latest_symbol_data[symbol]
+            bars_list = self.symbol_data[symbol]
         except KeyError:
             print("That symbol is not available in the historical data set.")
             raise
@@ -388,27 +360,13 @@ class LiveKrakenDataHandler(DataHandler):
         Returns a Python datetime object for the last bar.
         """
         try:
-            bars_list = self.latest_symbol_data[symbol]
+            bars_list = self.symbol_data[symbol]
         except KeyError:
             print("That symbol is not available in the historical data set.")
             raise
         else:
-            
-            # print(bars_list[-1][0],type(bars_list[-1][0]))
-            return bars_list[-1][0]
+            return max(bars_list.index)
 
-    def get_latest_bar_value(self, symbol, val_type):
-        """
-        Returns one of the Open, High, Low, Close, Volume or OI
-        values from the pandas Bar series object.
-        """
-        try:
-            bars_list = self.latest_symbol_data[symbol]
-        except KeyError:
-            print("That symbol is not available in the historical data set.")
-            raise
-        else:
-            return getattr(bars_list[-1][1], val_type)
 
     def get_latest_bars_values(self, symbol, val_type, N=1):
         """
@@ -422,8 +380,8 @@ class LiveKrakenDataHandler(DataHandler):
             print("That symbol is not available in the historical data set.")
             raise
         else:
-            print(bars_list)
-            return np.array([getattr(b[1], val_type) for b in bars_list])
+            bars_val_type=np.array(bars_list[val_type])
+            return bars_val_type 
 
     def update_bars(self):
         """
@@ -431,15 +389,19 @@ class LiveKrakenDataHandler(DataHandler):
         for all symbols in the symbol list.
         """
         for s in self.symbol_list:
-            bar,last=self.connection.get_ohlc_data(s, interval=1440, since=self.last, ascending=False)
-            if (bar.iloc[0]==self.symbol_data[s].iloc[0]).all==False:
-                self.latest_symbol_data[s].append(bar)
+            bar,last=self.connection.get_ohlc_data(s, interval=self.ohlc_time, since=self.last, ascending=True)
+            # print(s)
+            
+            if (bar.iloc[0]['time']>self.symbol_data[s].iloc[0]['time']):
+                self.symbol_data[s].append(bar)
+                self.symbol_data[s]=self.symbol_data[s][:-1]
                 self.last=last
                 self.events.put(MarketEvent())
-        
+            
 # %%% test
-# if __name__ == '__main__':
-#     events = queue.Queue()
-#     symbol_list = ['XXBTZEUR']
-#     s=LiveKrakenDataHandler(events, symbol_list).load_symbol_data_from_kraken
-#     s(symbol_list)
+if __name__ == '__main__':
+    events = queue.Queue()
+    symbol_list = ['XXBTZEUR']
+    ohlc_time=1
+    s=LiveKrakenDataHandler.load_symbol_data_from_kraken
+

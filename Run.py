@@ -12,7 +12,9 @@ try:
 except ImportError:
     import queue
 import time
+import signal
 
+from kraken_connection import return_kraken_connection
 
 
 from strategy import Strategy
@@ -29,9 +31,9 @@ class Run(object):
     """
 
     def __init__(
-        self, symbol_list, initial_capital,
+        self, symbol_list, initial_capital,ohlc_time,val,
         heartbeat, start_date, data_handler, 
-        execution_handler, portfolio, strategy
+        execution_handler, portfolio, strategy,connection
     ):
         """
         Initialises the backtest.
@@ -46,7 +48,9 @@ class Run(object):
         portfolio - (Class) Keeps track of portfolio current and prior positions.
         strategy - (Class) Generates signals based on market data.
         """
-   
+        self.connection=connection
+        self.val=val
+        self.ohlc_time= ohlc_time
         self.symbol_list = symbol_list
         self.initial_capital = initial_capital
         self.heartbeat = heartbeat
@@ -74,22 +78,22 @@ class Run(object):
         print(
             "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
         )
-        self.data_handler = self.data_handler_cls(self.events,self.symbol_list)
+        self.data_handler = self.data_handler_cls(self.events,self.symbol_list,self.ohlc_time)
         self.strategy = self.strategy_cls(self.data_handler, self.events)
         self.portfolio = self.portfolio_cls(self.data_handler, self.events, self.start_date, 
                                             self.initial_capital)
-        self.execution_handler = self.execution_handler_cls(self.events)
+        self.execution_handler = self.execution_handler_cls(self.events,self.connection)
 
     def _run_(self):
         """
         Executes the backtest.
         """
         self.data_handler.load_symbol_data_from_kraken(self.symbol_list)
-        print(self.symbol_list)
+        # print(self.symbol_list)
         i = 0
         while True:
             i += 1
-            print(i)
+            print('loop index',i)
             # Update the market bars
        
             self.data_handler.update_bars()
@@ -101,23 +105,24 @@ class Run(object):
                     event = self.events.get(False)
                 except queue.Empty:
                     break
-                else:
+                else: 
                     if event is not None:
                         if event.type == 'MARKET':
                             self.strategy.calculate_signals(event)
                             self.portfolio.update_timeindex(event)
-
+                          
                         elif event.type == 'SIGNAL':
                             self.signals += 1                            
                             self.portfolio.update_signal(event)
-
+                            
                         elif event.type == 'ORDER':
                             self.orders += 1
-                            self.execution_handler.execute_order(event)
-
+                            self.execution_handler.execute_order(event,val)
+                            
                         elif event.type == 'FILL':
                             self.fills += 1
                             self.portfolio.update_fill(event)
+                            
             time.sleep(self.heartbeat)
 
     def _output_performance(self):
@@ -141,8 +146,10 @@ class Run(object):
         """
         Simulates the backtest and outputs portfolio performance.
         """
-        self._run_()
-        self._output_performance()
+        try:
+            self._run_()
+        except KeyboardInterrupt:
+            self._output_performance()
 
 
 #%% run 
@@ -151,12 +158,13 @@ if __name__ == "__main__":
     symbol_list = ['XXBTZEUR']
     initial_capital = 2000.0
     heartbeat = 60
-    start_date = datetime.now
+    start_date = datetime.now()
     val=True #Setting this to FALSE will enable live trading
-
+    ohlc_time=1 #ohlc bar time, 1minute bars etc, can only be 1,5,15,30,60,240,1440,10080,21600
+    connection=return_kraken_connection()
     run = Run(
-        symbol_list, initial_capital, heartbeat, 
+        symbol_list, initial_capital,ohlc_time,val,heartbeat,
         start_date, LiveKrakenDataHandler, KrakenExecutionHandler, 
-        Portfolio, MovingAverageCrossStrategy
+        Portfolio, MovingAverageCrossStrategy,connection
     )
     run.trade()

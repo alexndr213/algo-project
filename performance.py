@@ -101,4 +101,9 @@ def create_drawdowns(pnl):
         hwm.append(max(hwm[t-1], pnl[t]))
         drawdown[t]= (hwm[t]-pnl[t])
         duration[t]= (0 if drawdown[t] == 0 else duration[t-1]+1)
+    try:
+        duration.max()
+    except ValueError:
+        duration=0
+        print('no trades')
     return drawdown, drawdown.max(), duration.max()

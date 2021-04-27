@@ -84,44 +84,38 @@ class SimulatedExecutionHandler(ExecutionHandler):
             
 
 class KrakenExecutionHandler(ExecutionHandler):
-    """ NEED MODIFICATIONS FOR KRAKEN API
+    """
     Handles order execution via Kraken
     API, for use against accounts when trading live
     directly. 
     """
+    with open('/home/alex/Documents/skola/finproj/key.txt') as f:
+             key = f.read()
+    with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
+        secret = f.read()
+        
+    api = krakenex.API(key.rstrip(), secret.rstrip())
+    connection = KrakenAPI(api)
+    
     def __init__(
-        self, events,  currency="ZEUR",val=True
+        self, events,connection, currency="ZEUR",validate=True
         ):
         """
         Initialises the IBExecutionHandler instance.
         """
-        self.events = events
-        self.currency = currency
-        self.create_kraken_connection()
-        self.val=val
-        
-    
-    def create_kraken_connection(self):
-        """
-        Connect to the Trader Workstation (TWS) running on the
-        usual port of 7496, with a clientId of 10.
-        The clientId is chosen by us and we will need
-        separate IDs for both the execution connection and
-        market data connection, if the latter is used elsewhere.
-        """
         with open('/home/alex/Documents/skola/finproj/key.txt') as f:
-            key = f.read()
+               key = f.read()
         with open('/home/alex/Documents/skola/finproj/secret.txt') as f:
             secret = f.read()
         
         api = krakenex.API(key.rstrip(), secret.rstrip())
-        kraken_conn = KrakenAPI(api)
-        return kraken_conn
-
-    
-    
-
+        self.connection = KrakenAPI(api)
         
+        
+        self.validate=validate
+        self.events = events
+        self.currency = currency
+        self.validate=validate
         
     def execute_order(self, event,val):
         """
@@ -136,30 +130,32 @@ class KrakenExecutionHandler(ExecutionHandler):
         
         # OrderEvent(symbol, order_type, abs(cur_quantity), 'BUY')
         if event.type == 'ORDER':
-            # Prepare the parameters for the asset order
-            asset = event.symbol
-            order_type = event.order_type
-            quantity = event.quantity
-            direction = event.direction
-            
-            orderinfo=self.connection.add_standard_order(asset,ordertype=order_type,type=direction,volume=quantity,validate=val)
-            # orderinfo=c.add_standard_order(pair,type='sell',ordertype='market',volume=0.0002,validate=val)
-            orderdescription=orderinfo['descr']['order']
-            try:
+        # Prepare the parameters for the asset order
+            pair = event.symbol
+            ordertype = event.order_type.lower()
+            if ordertype=='mkt':
+                ordertype='market'
+            volume = event.quantity
+            type = event.direction.lower()
+            print(pair,ordertype,volume,type)
+            orderinfo=self.connection.add_standard_order(pair,type,ordertype,volume)
+            # orderinfo=connection.add_standard_order(pair,,type,ordertype,volume,validate)
+            # orderdescription=orderinfo['descr']['order']
+            if val==False:
                 orderID=orderinfo['txid']
+                trade_info=self.connection.get_trades_history()[0].iloc[orderID]
+                # ['OU47U4-SDQUW-QFZ7ND']
+                trade_info=trade_info[trade_info['ordertxid'] == orderID]
+                
                 fill_event = FillEvent(
-                datetime.datetime.utcnow(), asset,
-                'kraken', orderID, direction, commission=None
+                trade_info.name, pair,
+                'kraken', trade_info['cost'], type, trade_info['fee']
                 )
             
-            except ValueError:
-                print('order did not go through, check order validate set to FALSE, creating placeholder FIll object')
-                
             else:    
                 fill_event = FillEvent(timeindex=
-                datetime.datetime.utcnow(), symbol=asset,
-                exchange='test', fill_cost=1, direction=direction, commission=None
+                datetime.datetime.utcnow(), symbol=pair,
+                exchange='test',quantity=event.quantity, fill_cost=1, direction=type, commission=None
                 )
-            
           
             self.events.put(fill_event)

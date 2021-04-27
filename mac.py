@@ -16,7 +16,7 @@ from backtest import Backtest
 from data import HistoricCSVDataHandler
 from execution import SimulatedExecutionHandler
 from portfolio import Portfolio
-
+from matplotlib import pyplot as plt
 
 class MovingAverageCrossStrategy(Strategy):
     """
@@ -26,7 +26,7 @@ class MovingAverageCrossStrategy(Strategy):
     """
 
     def __init__(
-        self, bars, events, short_window=20, long_window=50
+        self, bars, events, short_window=1, long_window=2
     ):
         """
         Initialises the Moving Average Cross Strategy.
@@ -67,15 +67,17 @@ class MovingAverageCrossStrategy(Strategy):
         """
         if event.type == 'MARKET':
             for s in self.symbol_list:
-                print(s)
                 bars = self.bars.get_latest_bars_values(
                     s, "close", N=self.long_window
                 )
+                print(len(bars))
                 bar_date = self.bars.get_latest_bar_datetime(s)
                 if bars is not None and bars != []:
                     short_sma = np.mean(bars[-self.short_window:])
                     long_sma = np.mean(bars[-self.long_window:])
-
+                    # plt.plot(bars[-self.short_window:])
+                    # plt.plot(bars[-self.long_window:])
+                    # plt.show()
                     symbol = s
                     dt = datetime.datetime.utcnow()
                     sig_dir = ""
@@ -100,7 +102,8 @@ if __name__ == "__main__":
     initial_capital = 2000.0
     heartbeat = 0.0
     start_date = datetime.datetime(2014, 3, 27, 0, 0, 0)
-
+    # long window
+    # short window, min dd max return optimera för den, testa  
     backtest = Backtest(
         csv_dir, symbol_list, initial_capital, heartbeat, 
         start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 

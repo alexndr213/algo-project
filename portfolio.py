@@ -122,7 +122,7 @@ class Portfolio(object):
         for s in self.symbol_list:
             # Approximation to the real value
             market_value = self.current_positions[s] * \
-                self.bars.get_latest_bar_value(s, "close")
+                self.bars.get_latest_bars_values(s, "close")
             dh[s] = market_value
             dh['total'] += market_value
 
@@ -167,7 +167,7 @@ class Portfolio(object):
             fill_dir = -1
 
         # Update holdings list with new quantities
-        fill_cost = self.bars.get_latest_bar_value(
+        fill_cost = self.bars.get_latest_bars_values(
             fill.symbol, "close"
         )
         cost = fill_dir * fill_cost * fill.quantity

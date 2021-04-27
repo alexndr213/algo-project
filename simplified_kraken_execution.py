@@ -30,7 +30,7 @@ while True:
         orderinfo=c.add_standard_order(pair,type='buy',ordertype='market',volume=0.0002,validate=val)
         orderdescription=orderinfo['descr']['order']
         orderID=orderinfo['txid']
-        #example return
+        #example return from real trade
         # {'descr': {'order': 'buy 0.00020000 XBTEUR @ market'},
          # 'txid': ['OU47U4-SDQUW-QFZ7ND']}
     elif (np.mean(shortwindow)<np.mean(longwindow)) and (status=='IN'):
