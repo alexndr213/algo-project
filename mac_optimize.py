@@ -12,7 +12,7 @@ import pandas as pd
 
 from strategy import Strategy
 from event import SignalEvent
-from backtest import Backtest
+from backtest_optimize import Backtest
 from data import HistoricCSVDataHandler
 from execution import SimulatedExecutionHandler
 from portfolio import Portfolio
@@ -26,7 +26,8 @@ class MovingAverageCrossStrategy(Strategy):
     """
 
     def __init__(
-        self, bars, events, short_window=100, long_window=400
+        self, bars, events, 
+        short_window, long_window
     ):
         """
         Initialises the Moving Average Cross Strategy.
@@ -70,14 +71,14 @@ class MovingAverageCrossStrategy(Strategy):
                 bars = self.bars.get_latest_bars_values(
                     s, "close", N=self.long_window
                 )
-
+                # print(self.short_window)
                 bar_date = self.bars.get_latest_bar_datetime(s)
-                # print(bars)
                 if bars is not None:
                 # and bars != []:
+                   
                     short_sma = np.mean(bars[-self.short_window:])
                     long_sma = np.mean(bars[-self.long_window:])
-           
+                    
                     symbol = s
                     dt = datetime.datetime.utcnow()
                     sig_dir = ""
@@ -95,18 +96,20 @@ class MovingAverageCrossStrategy(Strategy):
                         self.events.put(signal)
                         self.bought[s] = 'OUT'
 
-#%% run backtest
+# %% run backtest
 if __name__ == "__main__":
-    csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
-    symbol_list = ['GOOG']
-    initial_capital = 2000.0
-    heartbeat = 0.0
-    start_date = datetime.datetime(1990, 3, 27, 0, 0, 0)
-    # long window
-    # short window, min dd max return optimera för den, testa  
-    backtest = Backtest(
-        csv_dir, symbol_list, initial_capital, heartbeat, 
-        start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 
-        Portfolio, MovingAverageCrossStrategy
-    )
-    backtest.simulate_trading()
+    def f(longwindow,shortwindow):
+            csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
+            symbol_list = ['GOOG']
+            initial_capital = 2000.0
+            heartbeat = 0.0
+            start_date = datetime.datetime(2013, 10, 7, 0, 0, 0)
+            backtest = Backtest(
+                csv_dir,symbol_list, initial_capital,
+                longwindow,shortwindow, 
+                heartbeat,start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 
+                Portfolio, MovingAverageCrossStrategy
+            )
+            backtest.simulate_trading()
+            return backtest._output_performance()
+            # return 

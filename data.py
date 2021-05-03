@@ -141,8 +141,9 @@ class HistoricCSVDataHandler(DataHandler):
                    'low', 'close', 'volume'
                    ]
                    ).sort_values(by='datetime', ascending = True)
-           except:
-               print('not AV format')
+           except Exception:
+                # pass
+                  print('not AV format')
           
              #checks if content is yhoo format
            try:
@@ -172,7 +173,7 @@ class HistoricCSVDataHandler(DataHandler):
                 'low', 'close', 'volume','trades'
                 ],header=0,index_col=0)
                 self.symbol_data[s].index=pd.to_datetime(self.symbol_data[s].index,unit='s')
-                print(self.symbol_data[s])
+                # print(self.symbol_data[s])
            except ValueError:
                 print('not kraken format')
                
@@ -191,7 +192,7 @@ class HistoricCSVDataHandler(DataHandler):
                  index=comb_index, method='pad'
              )
              self.symbol_data[s]["returns"] = self.symbol_data[s]["close"].pct_change()
-             print(self.symbol_data[s])
+             # print(self.symbol_data[s])
              self.symbol_data[s] = self.symbol_data[s].iterrows()
         # print(self.symbol_data[s])
 

@@ -21,7 +21,7 @@ class Backtest(object):
     """
 
     def __init__(
-        self, csv_dir, symbol_list, initial_capital,
+        self, csv_dir, symbol_list, initial_capital,longwindow,shortwindow,
         heartbeat, start_date, data_handler, 
         execution_handler, portfolio, strategy
     ):
@@ -39,7 +39,9 @@ class Backtest(object):
         portfolio - (Class) Keeps track of portfolio current and prior positions.
         strategy - (Class) Generates signals based on market data.
         """
-
+        self.longwindow=longwindow
+        self.shortwindow=shortwindow
+        # print(longwindow,shortwindow)
         self.csv_dir = csv_dir
         self.symbol_list = symbol_list
         self.initial_capital = initial_capital
@@ -65,11 +67,11 @@ class Backtest(object):
         Generates the trading instance objects from 
         their class types.
         """
-        print(
-            "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
-        )
+        # print(
+            # "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
+        # )
         self.data_handler = self.data_handler_cls(self.events, self.csv_dir, self.symbol_list)
-        self.strategy = self.strategy_cls(self.data_handler, self.events)
+        self.strategy = self.strategy_cls(self.data_handler, self.events,self.shortwindow,self.longwindow)
         self.portfolio = self.portfolio_cls(self.data_handler, self.events, self.start_date, 
                                             self.initial_capital)
         self.execution_handler = self.execution_handler_cls(self.events)
@@ -80,7 +82,7 @@ class Backtest(object):
         """
         i = 0
         while True:
-            i += 1
+            # i += 1
             # print(i)
             # Update the market bars
             if self.data_handler.continue_backtest == True:
@@ -119,11 +121,11 @@ class Backtest(object):
         """
         self.portfolio.create_equity_curve_dataframe()
         
-        print("Creating summary stats...")
+        # print("Creating summary stats...")
         stats = self.portfolio.output_summary_stats()
         
-        print("Creating equity curve...")
-        print(self.portfolio.equity_curve.tail(10))
+        # print("Creating equity curve...")
+        # print(self.portfolio.equity_curve.tail(10))
         pprint.pprint(stats)
 
         print("Signals: %s" % self.signals)
@@ -131,7 +133,6 @@ class Backtest(object):
         print("Fills: %s" % self.fills)
         
         return stats
-
     def simulate_trading(self):
         """
         Simulates the backtest and outputs portfolio performance.

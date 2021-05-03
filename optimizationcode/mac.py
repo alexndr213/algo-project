@@ -4,11 +4,14 @@
 # mac.py
 
 from __future__ import print_function
+import scipy.optimize
 
 import datetime
-
+from scipy.optimize import brute
+import itertools
 import numpy as np
 import pandas as pd
+# import statsmodels.api as sm
 
 from strategy import Strategy
 from event import SignalEvent
@@ -16,7 +19,7 @@ from backtest import Backtest
 from data import HistoricCSVDataHandler
 from execution import SimulatedExecutionHandler
 from portfolio import Portfolio
-from matplotlib import pyplot as plt
+
 
 class MovingAverageCrossStrategy(Strategy):
     """
@@ -26,7 +29,7 @@ class MovingAverageCrossStrategy(Strategy):
     """
 
     def __init__(
-        self, bars, events, short_window=100, long_window=400
+        self, bars, events, short_window, long_window
     ):
         """
         Initialises the Moving Average Cross Strategy.
@@ -70,14 +73,12 @@ class MovingAverageCrossStrategy(Strategy):
                 bars = self.bars.get_latest_bars_values(
                     s, "close", N=self.long_window
                 )
-
                 bar_date = self.bars.get_latest_bar_datetime(s)
-                # print(bars)
                 if bars is not None:
-                # and bars != []:
+                    # and bars != []:
                     short_sma = np.mean(bars[-self.short_window:])
                     long_sma = np.mean(bars[-self.long_window:])
-           
+
                     symbol = s
                     dt = datetime.datetime.utcnow()
                     sig_dir = ""
@@ -95,18 +96,28 @@ class MovingAverageCrossStrategy(Strategy):
                         self.events.put(signal)
                         self.bought[s] = 'OUT'
 
-#%% run backtest
+
 if __name__ == "__main__":
-    csv_dir = '~/Documents/skola/finproj/algo-project/csv_dir'  
-    symbol_list = ['GOOG']
-    initial_capital = 2000.0
-    heartbeat = 0.0
-    start_date = datetime.datetime(1990, 3, 27, 0, 0, 0)
-    # long window
-    # short window, min dd max return optimera för den, testa  
-    backtest = Backtest(
-        csv_dir, symbol_list, initial_capital, heartbeat, 
-        start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 
-        Portfolio, MovingAverageCrossStrategy
-    )
-    backtest.simulate_trading()
+   def f(x):
+       
+        shortwindow=x[0]
+        longwindow=x[1]
+        if shortwindow>=longwindow:
+            return 1
+        csv_dir = '~/Documents/skola/finproj/algorithmic_trading_book-master/sat_source/csv_dir'  # CHANGE THIS!
+        symbol_list = ['GOOG']
+        initial_capital = 100000.0
+        heartbeat = 0.0
+        start_date = datetime.datetime(1990, 1, 1, 0, 0, 0)
+    
+        backtest = Backtest(
+            csv_dir, symbol_list, initial_capital, heartbeat, 
+            start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 
+            Portfolio, MovingAverageCrossStrategy,shortwindow,longwindow
+        )
+        backtest.simulate_trading()
+        backtest._output_performance()
+
+   # ranges = (slice(300, 450, 5),)*2  380,395 maxima
+   # result = brute(f, ranges, disp=True, finish=None)
+   # print(result)

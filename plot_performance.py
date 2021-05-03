@@ -18,10 +18,10 @@ if __name__ == "__main__":
         '/home/alex/Documents/skola/finproj/algo-project/backtest_result.csv', header=0, 
         parse_dates=True, index_col=0
     ).sort_values(by='datetime')
+    data=data.iloc[1:]
     
     
-    
-    
+    print(data['equity_curve_pct'])
     data['equity_curve_pct'].plot(ylabel='portfolio value %',color="blue", lw=1.)
     plt.grid(True)
     plt.show()

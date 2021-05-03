@@ -23,7 +23,7 @@ class Backtest(object):
     def __init__(
         self, csv_dir, symbol_list, initial_capital,
         heartbeat, start_date, data_handler, 
-        execution_handler, portfolio, strategy
+        execution_handler, portfolio, strategy,short_window,long_window
     ):
         """
         Initialises the backtest.
@@ -39,7 +39,8 @@ class Backtest(object):
         portfolio - (Class) Keeps track of portfolio current and prior positions.
         strategy - (Class) Generates signals based on market data.
         """
-
+        self.short_window=short_window
+        self.long_window=long_window
         self.csv_dir = csv_dir
         self.symbol_list = symbol_list
         self.initial_capital = initial_capital
@@ -65,11 +66,11 @@ class Backtest(object):
         Generates the trading instance objects from 
         their class types.
         """
-        print(
-            "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
-        )
+        # print(
+        #     "Creating DataHandler, Strategy, Portfolio and ExecutionHandler"
+        # )
         self.data_handler = self.data_handler_cls(self.events, self.csv_dir, self.symbol_list)
-        self.strategy = self.strategy_cls(self.data_handler, self.events)
+        self.strategy = self.strategy_cls(self.data_handler, self.events,self.short_window,self.long_window)
         self.portfolio = self.portfolio_cls(self.data_handler, self.events, self.start_date, 
                                             self.initial_capital)
         self.execution_handler = self.execution_handler_cls(self.events)
@@ -111,6 +112,7 @@ class Backtest(object):
                         elif event.type == 'FILL':
                             self.fills += 1
                             self.portfolio.update_fill(event)
+
             time.sleep(self.heartbeat)
 
     def _output_performance(self):
@@ -129,12 +131,10 @@ class Backtest(object):
         print("Signals: %s" % self.signals)
         print("Orders: %s" % self.orders)
         print("Fills: %s" % self.fills)
-        
         return stats
-
     def simulate_trading(self):
         """
         Simulates the backtest and outputs portfolio performance.
         """
         self._run_backtest()
-        self._output_performance()
+        # self._output_performance()

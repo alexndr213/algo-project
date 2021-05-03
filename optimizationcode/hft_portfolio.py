@@ -16,14 +16,18 @@ import numpy as np
 import pandas as pd
 
 from event import FillEvent, OrderEvent
-from performance import create_sharpe_ratio, create_drawdowns,monte_carlo
+from performance import create_sharpe_ratio, create_drawdowns
 
 
-class Portfolio(object):
+class PortfolioHFT(object):
     """
     The Portfolio class handles the positions and market
-    value of all instruments at a resolution of a "bar",
-    i.e. secondly, minutely, 5-min, 30-min, 60 min or EOD.
+    value of all instruments at a resolution of one
+    minutely bar. It is almost identical to the standard
+    Portfolio class, except that the Sharpe Ratio 
+    calculation is modified and the correct call is made
+    to the HFT Data object for the 'close' price with 
+    DTN IQFeed data.
 
     The positions DataFrame stores a time-index of the 
     quantity of positions held. 
@@ -122,7 +126,7 @@ class Portfolio(object):
         for s in self.symbol_list:
             # Approximation to the real value
             market_value = self.current_positions[s] * \
-                self.bars.get_latest_bars_values(s, "close")
+                self.bars.get_latest_bar_value(s, "close")
             dh[s] = market_value
             dh['total'] += market_value
 
@@ -167,7 +171,7 @@ class Portfolio(object):
             fill_dir = -1
 
         # Update holdings list with new quantities
-        fill_cost = self.bars.get_latest_bars_values(
+        fill_cost = self.bars.get_latest_bar_value(
             fill.symbol, "close"
         )
         cost = fill_dir * fill_cost * fill.quantity
@@ -184,38 +188,7 @@ class Portfolio(object):
         if event.type == 'FILL':
             self.update_positions_from_fill(event)
             self.update_holdings_from_fill(event)
-    
-    
-    def generate_order(self, signal):
-        """
-        Simply files an Order object as a constant quantity
-        sizing of the signal object, without risk management or
-        position sizing considerations.
 
-        Parameters:
-        signal - The tuple containing Signal information.
-        """
-        order = None
-
-        symbol = signal.symbol
-        direction = signal.signal_type
-        strength = signal.strength
-
-        mkt_quantity = 0.0002
-        cur_quantity = self.current_positions[symbol]
-        order_type = 'MKT'
-
-        if direction == 'LONG' and cur_quantity == 0:
-            order = OrderEvent(symbol, order_type, mkt_quantity, 'BUY')
-        if direction == 'SHORT' and cur_quantity == 0:
-            order = OrderEvent(symbol, order_type, mkt_quantity, 'SELL')   
-    
-        if direction == 'EXIT' and cur_quantity > 0:
-            order = OrderEvent(symbol, order_type, abs(cur_quantity), 'SELL')
-        if direction == 'EXIT' and cur_quantity < 0:
-            order = OrderEvent(symbol, order_type, abs(cur_quantity), 'BUY')
-        return order        
-    
     def generate_naive_order(self, signal):
         """
         Simply files an Order object as a constant quantity
@@ -231,7 +204,7 @@ class Portfolio(object):
         direction = signal.signal_type
         strength = signal.strength
 
-        mkt_quantity = 0.0002
+        mkt_quantity = 100
         cur_quantity = self.current_positions[symbol]
         order_type = 'MKT'
 
@@ -266,28 +239,26 @@ class Portfolio(object):
         """
         curve = pd.DataFrame(self.all_holdings)
         curve.set_index('datetime', inplace=True)
-        curve['returns_pct'] = curve['total'].pct_change()
-        curve['equity_curve_pct'] = (1.0+curve['returns_pct']).cumprod()
-        
+        curve['returns'] = curve['total'].pct_change()
+        curve['equity_curve'] = (1.0+curve['returns']).cumprod()
         self.equity_curve = curve
-      
+
     def output_summary_stats(self):
         """
         Creates a list of summary statistics for the portfolio.
         """
-        total_return = self.equity_curve['equity_curve_pct'][-1]
-        returns = self.equity_curve['returns_pct']
-        pnl = self.equity_curve['equity_curve_pct']
-        
-        sharpe_ratio = create_sharpe_ratio(returns)
+        total_return = self.equity_curve['equity_curve'][-1]
+        returns = self.equity_curve['returns']
+        pnl = self.equity_curve['equity_curve']
+
+        sharpe_ratio = create_sharpe_ratio(returns, periods=252*6.5*60)
         drawdown, max_dd, dd_duration = create_drawdowns(pnl)
-        self.equity_curve['drawdown_pct'] = drawdown
-        
+        self.equity_curve['drawdown'] = drawdown
+
         stats = [("Total Return", "%0.2f%%" % ((total_return - 1.0) * 100.0)),
-                  ("Sharpe Ratio", "%0.2f" % sharpe_ratio),
-                  ("Max Drawdown", "%0.2f%%" % (max_dd * 100.0)),
-                  ("Drawdown Duration", "%d" % dd_duration)]
-        opti_parameter_to_maximize=(total_return-1)/max_dd
-        self.equity_curve.to_csv('backtest_result.csv')
+                 ("Sharpe Ratio", "%0.2f" % sharpe_ratio),
+                 ("Max Drawdown", "%0.2f%%" % (max_dd * 100.0)),
+                 ("Drawdown Duration", "%d" % dd_duration)]
+
+        self.equity_curve.to_csv('equity.csv')
         return stats
-    # ,stats
