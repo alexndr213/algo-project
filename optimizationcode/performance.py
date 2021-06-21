@@ -8,6 +8,61 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+from data import HistoricCSVDataHandler
+
+
+def monte_carlo(sims=100,ruin_pct=0.6):
+    data = pd.io.parsers.read_csv(
+       '~/Documents/skola/finproj/algo-project/optimizationcode/equity.csv', header=0, 
+       parse_dates=True, index_col=0
+    )
+    profit_results = data['returns']
+    profit_results=profit_results[profit_results!=0]
+    profit_results=profit_results.iloc[1:]
+    ruins=0
+    pricewalk=[]
+    temp=[]
+    drawdown_list=[]
+    max_dd_list=[]
+    dd_duration_list=[]
+    for i in range (0,sims):
+        temp=[1]
+        temp.extend(profit_results.sample(n=len(profit_results),axis=0,replace=False).tolist())
+        temp=np.cumsum(temp)
+        pricewalk.append(temp)
+        pdtemp=pd.Series(
+            temp[1:],index=profit_results.index,
+            ).sort_index(ascending=True)
+        dd, mdd, dd_d=create_drawdowns(pdtemp)
+        drawdown_list.append(dd)
+        if mdd>1-ruin_pct:
+            ruins+=1
+        max_dd_list.append(mdd)
+        # dd_duration_list.append(dd_d)
+    print('risk of ruin=',ruins/sims,
+          '\nmedian of max drawdown=', np.median(max_dd_list),
+          '\nmedian return=',np.median(profit_results),
+          '\nmedian return/max drawdown=',np.median(profit_results)/np.median(max_dd_list))
+    for i in range(0,sims):
+        plt.plot(pricewalk[i],lw=.5,color='k')
+    
+    plt.plot(np.cumsum(profit_results.tolist())+1,lw=2,color='b')
+    plt.xlabel('Trade #')
+    plt.ylabel('Percentage return')
+    plt.show()   
+
+def buy_N_hold():
+    data = pd.io.parsers.read_csv(
+       '/home/alex/Documents/skola/finproj/algo-project/equity.csv', header=0, 
+       parse_dates=True, index_col=0
+    )
+    name=data.columns[0]
+    temp=data[name]
+    temp=temp[temp!=0]
+    percentage_return=temp.iloc[-1]/temp.iloc[0]
+    
+    return percentage_return
 
 def create_sharpe_ratio(returns, periods=252):
     """

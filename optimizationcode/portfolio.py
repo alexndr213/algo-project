@@ -255,7 +255,8 @@ class Portfolio(object):
                  ("Sharpe Ratio", "%0.2f" % sharpe_ratio),
                  ("Max Drawdown", "%0.2f%%" % (max_dd * 100.0)),
                  ("Drawdown Duration", "%d" % dd_duration)]
-
+        # if total_return<0:
+        #     total_return=0
+            
         self.equity_curve.to_csv('equity.csv')
-        return stats
-# total_return/max_dd,
+        return total_return/max_dd

@@ -16,7 +16,7 @@ try:
 except ImportError:
     import queue
 
-from event import MarketEvent
+from Event import MarketEvent
 import krakenex
 from pykrakenapi import KrakenAPI
 

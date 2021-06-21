@@ -8,6 +8,7 @@ import scipy.optimize
 
 import datetime
 from scipy.optimize import brute
+import scipy.optimize as opt
 import itertools
 import numpy as np
 import pandas as pd
@@ -98,13 +99,13 @@ class MovingAverageCrossStrategy(Strategy):
 
 
 if __name__ == "__main__":
-   def f(x):
+    def f(x):
        
-        shortwindow=x[0]
-        longwindow=x[1]
+        shortwindow=round(x[0])
+        longwindow=round(x[1])
         if shortwindow>=longwindow:
             return 1
-        csv_dir = '~/Documents/skola/finproj/algorithmic_trading_book-master/sat_source/csv_dir'  # CHANGE THIS!
+        csv_dir = '~/Documents/skola/finproj/algo-project/optimizationcode/'  # CHANGE THIS!
         symbol_list = ['GOOG']
         initial_capital = 100000.0
         heartbeat = 0.0
@@ -115,9 +116,13 @@ if __name__ == "__main__":
             start_date, HistoricCSVDataHandler, SimulatedExecutionHandler, 
             Portfolio, MovingAverageCrossStrategy,shortwindow,longwindow
         )
-        backtest.simulate_trading()
-        backtest._output_performance()
-
-   # ranges = (slice(300, 450, 5),)*2  380,395 maxima
-   # result = brute(f, ranges, disp=True, finish=None)
-   # print(result)
+        backtest.simulate_trading() 
+        return -backtest._output_performance()
+        
+    res=opt.fmin(f,[310,385],maxiter=10,full_output=True)
+    # ranges = (slice(10, 400, 1),)*2  
+    # 380,395 maxima for google
+    # 310,385 max för btc usd
+    
+    # result = brute(f, ranges, disp=True, finish=None)
+    # print(result)

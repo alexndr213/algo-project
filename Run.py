@@ -18,7 +18,7 @@ from kraken_connection import return_kraken_connection
 
 
 from strategy import Strategy
-from event import SignalEvent
+from Event import SignalEvent
 from data import LiveKrakenDataHandler
 from execution import KrakenExecutionHandler
 from portfolio import Portfolio
@@ -154,7 +154,6 @@ class Run(object):
 
 #%% run 
 if __name__ == "__main__":
-    
     symbol_list = ['XXBTZEUR']
     initial_capital = 2000.0
     heartbeat = 60

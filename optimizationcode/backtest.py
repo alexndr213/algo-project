@@ -121,16 +121,16 @@ class Backtest(object):
         """
         self.portfolio.create_equity_curve_dataframe()
         
-        print("Creating summary stats...")
+        # print("Creating summary stats...")
         stats = self.portfolio.output_summary_stats()
         
-        print("Creating equity curve...")
-        print(self.portfolio.equity_curve.tail(10))
+        # print("Creating equity curve...")
+        # print(self.portfolio.equity_curve.tail(10))
         pprint.pprint(stats)
 
-        print("Signals: %s" % self.signals)
-        print("Orders: %s" % self.orders)
-        print("Fills: %s" % self.fills)
+        # print("Signals: %s" % self.signals)
+        # print("Orders: %s" % self.orders)
+        # print("Fills: %s" % self.fills)
         return stats
     def simulate_trading(self):
         """

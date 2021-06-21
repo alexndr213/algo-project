@@ -72,6 +72,8 @@ def monte_carlo(sims=100,ruin_pct=0.6):
         plt.plot(pricewalk[i],lw=.5)
     
     plt.plot(np.cumsum(profit_results.tolist())+1,lw=2)
+    plt.xlabel('Trade #')
+    plt.ylabel('Percentage return')
     plt.show()    
     
 def create_drawdowns(pnl):
@@ -94,21 +96,8 @@ def create_drawdowns(pnl):
     # Create the drawdown and duration series
     idx = pnl.index
     drawdown = pd.Series(index = idx)
-    # ,dtype='float64')
     duration = pd.Series(index = idx)
-    # ,dtype='float64')
     
-    # # Loop over the index range
-    # for t in range(1, len(idx)):
-    #     hwm.append(max(hwm[t-1], pnl[t]))
-    #     drawdown[t]= (hwm[t]-pnl[t])
-    #     duration[t]= (0 if drawdown[t] == 0 else duration[t-1]+1)
-    # try:
-    #     duration.max()
-    # except ValueError:
-    #     duration=0
-    #     print('no trades')
-    # return drawdown, drawdown.max(), duration.max()
     for t in range(1, len(idx)):
         hwm.append(max(hwm[t-1], pnl[t]))
         drawdown[t]= (hwm[t]-pnl[t])
